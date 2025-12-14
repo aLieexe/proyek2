@@ -62,7 +62,7 @@ resource "kubernetes_deployment_v1" "backend" {
           image = "nginx:alpine"
           name  = "backend"
           port {
-            container_port = 8080
+            container_port = 80
           }
         }
       }
@@ -78,7 +78,7 @@ resource "kubernetes_service_v1" "backend" {
     type = "ClusterIP"
     port {
       port        = 8080
-      target_port = 8080
+      target_port = 80
     }
     selector = {
       app = "backend"
