@@ -31,7 +31,7 @@ resource "kubernetes_service_v1" "frontend" {
     name = "frontend"
   }
   spec {
-    type = "NodePort" # Cocok untuk Minikube
+    type = "NodePort"
     port {
       port        = 80
       target_port = 80
