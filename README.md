@@ -20,14 +20,6 @@ Aplikasi terdiri dari tiga komponen utama:
 - **Konfigurasi Variabel:** Port, image container, dan credential database disimpan dalam variabel Terraform.
 - **Persistent Storage:** Data PostgreSQL disimpan menggunakan PersistentVolumeClaim (PVC) untuk persistensi data.
 
-## Prasyarat
-
-- Sistem Operasi: Linux Ubuntu 24.04.3
-- Docker
-- `kubectl`
-- `minikube`
-- `terraform`
-
 ## Setup Lingkungan
 
 1.  **Install Prasyarat:**
