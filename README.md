@@ -99,7 +99,7 @@ Aplikasi terdiri dari tiga komponen utama:
 
 Jika semua pengujian berjalan sesuai harapan, maka `NetworkPolicy` telah berhasil diterapkan.
 
-## Testing Persistensi Data (Opsional)
+## Test Persistensi Data (VPC)
 
 1.  **Masuk ke Pod Database:**
     ```bash
