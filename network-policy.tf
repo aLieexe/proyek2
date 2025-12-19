@@ -1,5 +1,5 @@
 # 1. Hanya FRONTEND boleh akses BACKEND
-resource "kubernetes_network_policy" "allow_frontend_to_backend" {
+resource "kubernetes_network_policy_v1" "allow_frontend_to_backend" {
   metadata { name = "allow-frontend-to-backend" }
   spec {
     pod_selector { match_labels = { app = "backend" } }
@@ -13,7 +13,7 @@ resource "kubernetes_network_policy" "allow_frontend_to_backend" {
 }
 
 # 2. Hanya BACKEND boleh akses DATABASE
-resource "kubernetes_network_policy" "allow_backend_to_database" {
+resource "kubernetes_network_policy_v1" "allow_backend_to_database" {
   metadata { name = "allow-backend-to-database" }
   spec {
     pod_selector { match_labels = { app = "database" } }
