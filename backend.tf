@@ -1,8 +1,9 @@
 # --- BACKEND ---
 resource "kubernetes_deployment_v1" "backend" {
   metadata {
-    name = "backend"
-    labels = { app = "backend" }
+    name      = "backend"
+    namespace = kubernetes_namespace_v1.backend_ns.metadata[0].name
+    labels    = { app = "backend" }
   }
   spec {
     replicas = 1
@@ -11,7 +12,8 @@ resource "kubernetes_deployment_v1" "backend" {
     }
     template {
       metadata {
-        labels = { app = "backend" }
+        namespace = kubernetes_namespace_v1.backend_ns.metadata[0].name
+        labels    = { app = "backend" }
       }
       spec {
         container {
@@ -28,7 +30,8 @@ resource "kubernetes_deployment_v1" "backend" {
 
 resource "kubernetes_service_v1" "backend" {
   metadata {
-    name = "backend"
+    name      = "backend"
+    namespace = kubernetes_namespace_v1.backend_ns.metadata[0].name
   }
   spec {
     type = "ClusterIP"

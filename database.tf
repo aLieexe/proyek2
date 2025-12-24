@@ -1,7 +1,8 @@
 # --- DATABASE ---
 resource "kubernetes_secret_v1" "database_credentials" {
   metadata {
-    name = "database-credentials"
+    name      = "database-credentials"
+    namespace = kubernetes_namespace_v1.database_ns.metadata[0].name
   }
   data = {
     username = var.database_username
@@ -12,8 +13,9 @@ resource "kubernetes_secret_v1" "database_credentials" {
 
 resource "kubernetes_deployment_v1" "database" {
   metadata {
-    name    = "database"
-    labels  = { app = "database" }
+    name      = "database"
+    namespace = kubernetes_namespace_v1.database_ns.metadata[0].name
+    labels    = { app = "database" }
   }
   spec {
     replicas = 1
@@ -22,7 +24,8 @@ resource "kubernetes_deployment_v1" "database" {
     }
     template {
       metadata {
-        labels = { app = "database" }
+        namespace = kubernetes_namespace_v1.database_ns.metadata[0].name
+        labels    = { app = "database" }
       }
       spec {
         volume {
@@ -68,7 +71,8 @@ resource "kubernetes_deployment_v1" "database" {
 
 resource "kubernetes_service_v1" "database" {
   metadata {
-    name = "database"
+    name      = "database"
+    namespace = kubernetes_namespace_v1.database_ns.metadata[0].name
   }
   spec {
     type = "ClusterIP"

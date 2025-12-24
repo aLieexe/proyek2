@@ -1,8 +1,9 @@
 # --- FRONTEND ---
 resource "kubernetes_deployment_v1" "frontend" {
   metadata {
-    name = "frontend"
-    labels = { app = "frontend" }
+    name      = "frontend"
+    namespace = kubernetes_namespace_v1.frontend_ns.metadata[0].name
+    labels    = { app = "frontend" }
   }
   spec {
     replicas = 1
@@ -11,7 +12,8 @@ resource "kubernetes_deployment_v1" "frontend" {
     }
     template {
       metadata {
-        labels = { app = "frontend" }
+        namespace = kubernetes_namespace_v1.frontend_ns.metadata[0].name
+        labels    = { app = "frontend" }
       }
       spec {
         container {
@@ -29,9 +31,10 @@ resource "kubernetes_deployment_v1" "frontend" {
 resource "kubernetes_service_v1" "frontend" {
   metadata {
     name = "frontend"
+    namespace = kubernetes_namespace_v1.frontend_ns.metadata[0].name
   }
   spec {
-    type = "NodePort"
+    type = "LoadBalancer"
     port {
       port        = var.frontend_port
       target_port = var.frontend_port
