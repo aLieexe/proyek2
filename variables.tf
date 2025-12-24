@@ -52,3 +52,14 @@ variable "database_password" {
   sensitive   = true
   default     = "admin"
 }
+
+variable "database_host" {
+  type        = string
+  description = "Database hostname or service DNS"
+}
+
+
+variable "database_name" {
+  type        = string
+  description = "Database name"
+}
