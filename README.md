@@ -33,11 +33,11 @@ Aplikasi terdiri dari tiga komponen utama:
     Jalankan perintah berikut untuk membuat klaster Minikube dengan CNI Calico (diperlukan untuk NetworkPolicy).
     ```bash
     minikube start \
-      --driver=docker \
-      --container-runtime=docker \
-      --kubernetes-version=v1.31.0 \
-      --network-plugin=cni \
-      --cni=calico
+    --driver=docker \
+    --container-runtime=docker \
+    --kubernetes-version=v1.31.0 \
+    --network-plugin=cni \
+    --cni=calico
     ```
 
 ## Deployment
