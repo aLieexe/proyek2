@@ -39,7 +39,7 @@ Aplikasi terdiri dari tiga komponen utama:
     --kubernetes-version=v1.31.0
     ```
 
-3.  **Start Klaster Minikube:**
+3.  **Pasang CNI:**
     ```bash
     kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.1/manifests/calico.yaml
     ```
