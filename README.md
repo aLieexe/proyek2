@@ -34,7 +34,7 @@ Aplikasi terdiri dari tiga komponen utama:
     ```bash
     minikube start \
       --driver=docker \
-      --container-runtime=containerd \
+      --container-runtime=docker \
       --kubernetes-version=v1.31.0 \
       --network-plugin=cni \
       --cni=calico
