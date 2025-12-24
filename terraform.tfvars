@@ -1,5 +1,5 @@
-backend_image       = "pastebin-backend:kubernetes"
-frontend_image      = "pastebin-frontend:kubernetes"
+backend_image       = "alie12/pastebin-backend:kubernetes"
+frontend_image      = "alie12/pastebin-frontend:kubernetes"
 database_image      = "postgres:17"
 
 database_host     = "database.database-ns.svc.cluster.local"
