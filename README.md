@@ -1,6 +1,6 @@
 # Proyek 2: Deployment Kubernetes Aman dengan Terraform & Network Policy
 
-Proyek ini mendemonstrasikan deployment aplikasi multi-tier (frontend → backend → database) di klaster Kubernetes menggunakan Terraform. Fokus utama adalah menerapkan kebijakan jaringan internal (NetworkPolicy) untuk menerapkan prinsip zero-trust, memastikan bahwa hanya komunikasi yang diizinkan yang dapat terjadi antar pod.
+Proyek ini mendemonstrasikan deployment aplikasi multi-tier (frontend → backend → database) di cluster Kubernetes menggunakan Terraform. Fokus utama adalah menerapkan kebijakan jaringan internal (NetworkPolicy) untuk menerapkan prinsip zero-trust, memastikan bahwa hanya komunikasi yang diizinkan yang dapat terjadi antar pod.
 
 ## Arsitektur
 
@@ -19,6 +19,7 @@ Aplikasi terdiri dari tiga komponen utama:
   - `database` hanya boleh diakses oleh pod `backend`.
 - **Konfigurasi Variabel:** Port, image container, dan credential database disimpan dalam variabel Terraform.
 - **Persistent Storage:** Data PostgreSQL disimpan menggunakan PersistentVolumeClaim (PVC) untuk persistensi data.
+- **Isolasi Namespace**: Setiap komponen berjalan di namespace terpisah
 
 ## Setup Lingkungan
 
@@ -35,9 +36,12 @@ Aplikasi terdiri dari tiga komponen utama:
     minikube start \
     --driver=docker \
     --container-runtime=docker \
-    --kubernetes-version=v1.31.0 \
-    --network-plugin=cni \
-    --cni=calico
+    --kubernetes-version=v1.31.0
+    ```
+
+3.  **Start Klaster Minikube:**
+    ```bash
+    kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.1/manifests/calico.yaml
     ```
 
 ## Deployment
@@ -49,89 +53,104 @@ Aplikasi terdiri dari tiga komponen utama:
       database_password = "Sandi_Anda"
       ```
       
-2.  **Inisialisasi Terraform:**
+2.  **Aktifkan Minikube Tunnel (Apabila menggunakan WSL)**
+    ```bash
+    minikube tunnel
+    ```
+    
+3.  **Inisialisasi Terraform:**
     ```bash
     terraform init
     ```
 
-3.  **Validasi Konfigurasi:**
+4.  **Validasi Konfigurasi:**
+    ```bash
+    terraform plan
+    ```
     ```bash
     terraform validate
     ```
 
-4.  **Terapkan Konfigurasi:**
+5.  **Terapkan Konfigurasi:**
     ```bash
     terraform apply -auto-approve
     ```
+
+6. **Verifikasi Resource:**
+   ```bash
+   kubectl get all -A
+   kubectl get networkpolicy -A
+   ```
 
 ## Akses Aplikasi Frontend
 
 1.  **Dapatkan URL Frontend:**
     ```bash
-    minikube service frontend --url
+    minikube service frontend -n frontend-ns --url
     ```
-    Atau, akses langsung melalui `http://localhost:<NodePort>`. Port NodePort bisa dilihat di output `kubectl get services`.
+    Gunakan IP yang didapat untuk mengakses webpage service frontend
 
-## Testing Zero-Trust Network Policy
+## Testing
 
 1.  **Dapatkan Nama Pod:**
     ```bash
-    kubectl get pods
+    kubectl get pods -A
+    ```
+    Copy
+    ```bash
+    FPOD=$(kubectl get pod -n frontend-ns -l app=frontend -o jsonpath='{.items[0].metadata.name}')
+    BPOD=$(kubectl get pod -n backend-ns -l app=backend -o jsonpath='{.items[0].metadata.name}')
+    DPOD=$(kubectl get pod -n database-ns -l app=database -o jsonpath='{.items[0].metadata.name}')
     ```
 
 2.  **[IZIN] Uji Akses dari Frontend ke Backend:**
     ```bash
-    kubectl exec -it $FRONTEND_POD -- curl -v http://backend:8080
+    kubectl exec -n frontend-ns $FPOD -- curl -s http://backend.backend-ns.svc.cluster.local:8080 | head -3
     ```
-    Harus menampilkan halaman HTML dari nginx backend.
+    Output <!DOCTYPE html>
 
 3.  **[IZIN] Uji Akses dari Backend ke Database:**
     ```bash
-    kubectl exec -it $BACKEND_POD -- curl -v -m 5 http://database:5432
+    kubectl exec -n backend-ns $BPOD -- curl -v -m 5 http://database.database-ns.svc.cluster.local:5432
     ```
-    Harus menunjukkan `Connected to database...` dan `Empty reply from server` (karena bukan HTTP).
+    Output `Connected to database...` dan `Empty reply from server` (karena bukan HTTP).
 
 4.  **[DIBLOKIR] Uji Akses dari Frontend ke Database:**
     ```bash
-    kubectl exec -it $FRONTEND_POD -- curl -v -m 5 http://database:5432
+    kubectl exec -n frontend-ns $FPOD -- timeout 10 curl -v http://database.database-ns.svc.cluster.local:5432
     ```
-    Harus menunjukkan `Connection timed out after 5000 milliseconds`.
+    Output `command terminated with exit code 124` (Timeout)
 
 Jika semua pengujian berjalan sesuai harapan, maka `NetworkPolicy` telah berhasil diterapkan.
 
 ## Test Persistensi Data (VPC)
 
-1.  **Masuk ke Pod Database:**
+1.  **Buat Database Dummy:**
     ```bash
-    kubectl exec -it $DATABASE_POD -- bash
+    kubectl exec -n database-ns $DPOD -- psql -U (Username Anda) -c "CREATE DATABASE persist;"
     ```
     
-2.  **Set Password dan Buat Database Dummy:**
-    Gunakan user dan sandi yang telah di set dengan nilai dari `terraform.tfvars` Anda.
+2.  **Hapus Pod Database:**
     ```bash
-    # Di dalam pod:
-    export PGPASSWORD="Sandi_Anda" # Ganti dengan sandi Anda
-    psql -U User_Anda -c "CREATE DATABASE TEST_PERSIST;"
-    psql -U User_Anda -c "\l" # Lihat daftar database, pastikan 'TEST_PERSIST' ada
-    exit 
+    kubectl delete pod -n database-ns $DPOD
     ```
     
-3.  **Hapus Pod Database:**
+3.  **Tunggu Pod Baru Siap:**
     ```bash
-    kubectl delete pod $DATABASE_POD
+    kubectl get pods -A # Tunggu hingga Running
     ```
-    
-4.  **Tunggu Pod Baru Siap:**
+    Copy ulang setelah pod database berjalan
     ```bash
-    kubectl get pods # Tunggu hingga Running
+    DPOD_NEW=$(kubectl get pod -n database-ns -l app=database -o jsonpath='{.items[0].metadata.name}')
     ```
 
-5.  **Masuk ke Pod *Baru* dan Cek Data:**
+4.  **Verifikasi Database:**
     ```bash
-    kubectl exec -it <nama-pod-database-baru> -- bash
-    # Di dalam pod:
-    export PGPASSWORD="Sandi_Anda"
-    psql -U User_Anda -c "\l" # Cek database TEST_PERSIST
-    exit
+    kubectl exec -n database-ns $DPOD_NEW -- psql -U PTCPM -c "\l" | grep test_persist
     ```
-    Jika database `TEST_PERSIST` **MASIH ADA**, maka **PVC berfungsi dengan baik**.    
+    Jika database `TEST_PERSIST` **MASIH ADA**, maka **PVC berfungsi dengan baik**.
+
+5.  **Tampilkan Credential Database: (Apabila Diperlukan)**
+    ```bash
+    kubectl exec -n database-ns $DPOD_NEW -- env | grep -E "(POSTGRES_USER|POSTGRES_PASSWORD)"
+    ```
