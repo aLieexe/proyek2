@@ -146,7 +146,7 @@ Jika semua pengujian berjalan sesuai harapan, maka `NetworkPolicy` telah berhasi
 
 4.  **Verifikasi Database:**
     ```bash
-    kubectl exec -n database-ns $DPOD_NEW -- psql -U PTCPM -c "\l" | grep test_persist
+    kubectl exec -n database-ns $DPOD_NEW -- psql -U PTCPM -c "\l" | grep persist
     ```
     Jika database `TEST_PERSIST` **MASIH ADA**, maka **PVC berfungsi dengan baik**.
 
