@@ -11,12 +11,70 @@ resource "kubernetes_secret_v1" "database_credentials" {
   type = "Opaque"
 }
 
+resource "kubernetes_job_v1" "database_init" {
+  metadata {
+    name      = "database-init"
+    namespace = kubernetes_namespace_v1.database_ns.metadata[0].name
+  }
+
+  spec {
+    template {
+      metadata {
+        labels = { app = "database-init" }
+      }
+      spec {
+        restart_policy = "Never"
+
+        container {
+          name  = "init-db"
+          image = var.database_image
+
+          command = ["psql"]
+          args = [
+            "-U", var.database_username,
+            "-d", var.database_name,
+            "-c", "CREATE TABLE IF NOT EXISTS pastes (id SERIAL PRIMARY KEY, content TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"
+          ]
+
+          env {
+            name = "PGPASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret_v1.database_credentials.metadata[0].name
+                key  = "password"
+              }
+            }
+          }
+
+          env {
+            name  = "PGHOST"
+            value = kubernetes_service_v1.database.metadata[0].name
+          }
+
+          env {
+            name  = "PGPORT"
+            value = tostring(var.database_port)
+          }
+        }
+      }
+    }
+
+    backoff_limit = 4
+  }
+
+  depends_on = [kubernetes_deployment_v1.database]
+}
+
+
 resource "kubernetes_deployment_v1" "database" {
   metadata {
     name      = "database"
     namespace = kubernetes_namespace_v1.database_ns.metadata[0].name
     labels    = { app = "database" }
   }
+
+  wait_for_rollout = true # Add this
+
   spec {
     replicas = 1
     selector {
@@ -39,6 +97,7 @@ resource "kubernetes_deployment_v1" "database" {
           image = var.database_image
           name  = "database"
           env {
+
             name = "POSTGRES_PASSWORD"
             value_from {
               secret_key_ref {
@@ -47,6 +106,7 @@ resource "kubernetes_deployment_v1" "database" {
               }
             }
           }
+
           env {
             name = "POSTGRES_USER"
             value_from {
@@ -56,12 +116,17 @@ resource "kubernetes_deployment_v1" "database" {
               }
             }
           }
+
+          env {
+            name  = "POSTGRES_DB"
+            value = var.database_name
+          }
           port {
             container_port = var.database_port
           }
           volume_mount {
-            name        = "database-storage"
-            mount_path  = "/var/lib/postgresql/data"
+            name       = "database-storage"
+            mount_path = "/var/lib/postgresql/data"
           }
         }
       }

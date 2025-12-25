@@ -81,7 +81,6 @@ Aplikasi terdiri dari tiga komponen utama:
    kubectl get all -A
    kubectl get networkpolicy -A
    ```
-
 ## Akses Aplikasi Frontend
 
 1.  **Dapatkan URL Frontend:**
