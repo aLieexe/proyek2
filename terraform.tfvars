@@ -14,5 +14,3 @@ backend_container_port = 8080
 // Map it to the pod on 8080
 backend_port           = 8080
 frontend_port          = 80
-
-

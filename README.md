@@ -6,9 +6,9 @@ Proyek ini mendemonstrasikan deployment aplikasi multi-tier (frontend → backen
 
 Aplikasi terdiri dari tiga komponen utama:
 
-- **Frontend:** Server web Nginx (`nginx:latest`)
-- **Backend:** Server web Nginx (`nginx:latest`)
-- **Database:** Server PostgreSQL (`postgres:15`)
+- **Frontend:** [Repository](https://github.com/aLieexe/pastebin-frontend) - [Dockerhub](https://hub.docker.com/r/alie12/pastebin-frontend)`alie12/pastebin-frontend:kubernetes` 
+- **Backend:** [Repository](https://github.com/aLieexe/pastebin-backend) - [Dockerhub](hub.docker.com/r/alie12/pastebin-backend)`alie12/pastebin-backend:kubernetes`
+- **Database:** Server PostgreSQL (`postgres:17`)
 
 ## Fitur Utama
 
@@ -47,11 +47,7 @@ Aplikasi terdiri dari tiga komponen utama:
 ## Deployment
 
 1.  **Konfigurasi Variabel:**
-    - Buat file `terraform.tfvars` di dalam folder aplikasi multi-tier dengan isi:
-      ```bash
-      database_username = "User_Anda"
-      database_password = "Sandi_Anda"
-      ```
+    Check file `terraform.tfvars` ganti variable seperti password, user menjadi ke yang diinginkan:
       
 2.  **Aktifkan Minikube Tunnel (Apabila menggunakan WSL)**
     ```bash
